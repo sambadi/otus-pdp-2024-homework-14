@@ -45,3 +45,8 @@ uv run python memc_load.py --pattern "data/*.tsv.gz" --dry
 uv run python memc_load.py --pattern "data/*.tsv.gz" --dry --executor=process
 ```
 
+### Тестовые файлы
+- [20170929000000.tsv.gz](https://cloud.mail.ru/public/2hZL/Ko9s8R9TA)
+- [20170929000100.tsv.gz](https://cloud.mail.ru/public/DzSX/oj8RxGX1A)
+- [20170929000200.tsv.gz](https://cloud.mail.ru/public/LoDo/SfsPEzoGc)
+
