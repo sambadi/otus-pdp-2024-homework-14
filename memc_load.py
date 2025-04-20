@@ -14,13 +14,14 @@ import memcache
 
 NORMAL_ERR_RATE = 0.01
 
-AppsInstalled = collections.namedtuple("AppsInstalled", ["dev_type", "dev_id", "lat", "lon", "apps"])
-ParsingResult = collections.namedtuple("ParsingResult", ["file_path", "processed", "errors", "error_rate"])
+AppsInstalled = collections.namedtuple(
+    "AppsInstalled", ["dev_type", "dev_id", "lat", "lon", "apps"]
+)
+ParsingResult = collections.namedtuple(
+    "ParsingResult", ["file_path", "processed", "errors", "error_rate"]
+)
 
-SupportedExecutorsMap = {
-    "thread": ThreadPoolExecutor,
-    "process": ProcessPoolExecutor
-}
+SupportedExecutorsMap = {"thread": ThreadPoolExecutor, "process": ProcessPoolExecutor}
 
 
 def dot_rename(path):
@@ -57,7 +58,9 @@ def insert_appsinstalled(memc_client: memcache.Client, appsinstalled, dry_run=Fa
     packed = ua.SerializeToString()
     try:
         if dry_run:
-            logging.debug(f"{memc_client.servers[0]} - {key} -> {str(ua).replace("\n", " ")}")
+            logging.debug(
+                f"{memc_client.servers[0]} - {key} -> {str(ua).replace("\n", " ")}"
+            )
         else:
             memc_client.set(key, packed)
     except Exception as e:
@@ -67,13 +70,19 @@ def insert_appsinstalled(memc_client: memcache.Client, appsinstalled, dry_run=Fa
 
 
 def process_file(device_memc, file_path, log_file, dry_run=False):
-
     # To restore logging configuration under ProcessPoolExecutor
-    logging.basicConfig(filename=log_file, level=logging.INFO if not dry_run else logging.DEBUG,
-                        format='[%(asctime)s] %(levelname).1s %(message)s', datefmt='%Y.%m.%d %H:%M:%S')
+    logging.basicConfig(
+        filename=log_file,
+        level=logging.INFO if not dry_run else logging.DEBUG,
+        format="[%(asctime)s] %(levelname).1s %(message)s",
+        datefmt="%Y.%m.%d %H:%M:%S",
+    )
 
     processed = errors = 0
-    memc_clients = {memc_type: memcache.Client([memc_addr]) for memc_type, memc_addr in device_memc.items()}
+    memc_clients = {
+        memc_type: memcache.Client([memc_addr])
+        for memc_type, memc_addr in device_memc.items()
+    }
 
     with gzip.open(file_path, "rt") as fd:
         for line in fd:
@@ -101,15 +110,11 @@ def process_file(device_memc, file_path, log_file, dry_run=False):
             memc_client.disconnect_all()
 
     return ParsingResult(
-        file_path=file_path,
-        processed=processed,
-        errors=errors,
-        error_rate=err_rate
+        file_path=file_path, processed=processed, errors=errors, error_rate=err_rate
     )
 
 
 def main(options):
-
     device_memc = {
         "idfa": options.idfa,
         "gaid": options.gaid,
@@ -122,16 +127,22 @@ def main(options):
         logging.error(f"Executor of type {options.executor} isn`t supported!")
 
     with executor(max_workers=5) as executor:
-        futures = [executor.submit(process_file, device_memc, fn, options.log, options.dry)
-                   for fn in sorted(glob.iglob(options.pattern))]
+        futures = [
+            executor.submit(process_file, device_memc, fn, options.log, options.dry)
+            for fn in sorted(glob.iglob(options.pattern))
+        ]
 
         for future in as_completed(futures):
             result: ParsingResult = future.result()
             logging.info(f"File parsed {result.file_path}")
             if result.error_rate < NORMAL_ERR_RATE:
-                logging.info(f"Acceptable error rate ({result.error_rate}). Successful load")
+                logging.info(
+                    f"Acceptable error rate ({result.error_rate}). Successful load"
+                )
             else:
-                logging.error(f"High error rate ({result.error_rate} > {NORMAL_ERR_RATE}). Failed load")
+                logging.error(
+                    f"High error rate ({result.error_rate} > {NORMAL_ERR_RATE}). Failed load"
+                )
 
 
 def prototest():
@@ -150,7 +161,7 @@ def prototest():
         assert ua == unpacked
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     op = OptionParser()
     op.add_option("-t", "--test", action="store_true", default=False)
     op.add_option("-l", "--log", action="store", default=None)
@@ -162,8 +173,12 @@ if __name__ == '__main__':
     op.add_option("--dvid", action="store", default="127.0.0.1:33016")
     op.add_option("--executor", action="store", default="thread")
     (opts, args) = op.parse_args()
-    logging.basicConfig(filename=opts.log, level=logging.INFO if not opts.dry else logging.DEBUG,
-                        format='[%(asctime)s] %(levelname).1s %(message)s', datefmt='%Y.%m.%d %H:%M:%S')
+    logging.basicConfig(
+        filename=opts.log,
+        level=logging.INFO if not opts.dry else logging.DEBUG,
+        format="[%(asctime)s] %(levelname).1s %(message)s",
+        datefmt="%Y.%m.%d %H:%M:%S",
+    )
 
     if opts.test:
         prototest()
