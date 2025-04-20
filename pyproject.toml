@@ -1,0 +1,10 @@
+[project]
+name = "memcache-loader"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "protobuf>=6.30.2",
+    "python-memcached>=1.62",
+]
